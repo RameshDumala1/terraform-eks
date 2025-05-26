@@ -14,7 +14,7 @@ This project demonstrates a complete CI/CD pipeline using:
 
 ## 📦 Folder Structure
 ```
-DevOps-CI-CD/
+terraform-eks/
 ├── terraform/         # Terraform IaC for EKS Cluster
 ├── manifests/         # Kubernetes YAML files (NGINX app)
 ├── argocd/            # ArgoCD Application config
