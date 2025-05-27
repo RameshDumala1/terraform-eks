@@ -5,9 +5,14 @@ metadata:
   annotations:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:240224986682:certificate/50eadcf9-0c18-48eb-828d-4d771c2a935e
 spec:
   ingressClassName: alb
+  tls:
+    - hosts:
+        - nginx.example.com
+      secretName: nginx-tls  # optional for ACM (can be omitted when using certificate-arn)
   rules:
     - host: dumalarameshaws.info
       http:
