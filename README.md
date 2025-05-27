@@ -163,7 +163,6 @@ Use Route53 + custom domain
 
 Set up HTTPS (TLS) for NGINX
 
-📷 Screenshots (To Be Added)
  ArgoCD UI with NGINX app synced
 
  ![image](https://github.com/user-attachments/assets/f70b184e-6d84-49f7-b903-7a3f53ca7768)
@@ -171,7 +170,17 @@ Set up HTTPS (TLS) for NGINX
 
  NGINX service running via LoadBalancer or NodePort
 
+ ![image](https://github.com/user-attachments/assets/8e7ba680-94d4-408d-9592-7ee6e5fd8fac)
+
+ ![image](https://github.com/user-attachments/assets/aae4068c-193e-44c3-ba9c-865bdf048bb4)
+
+
+
  EKS nodes visible in kubectl get nodes
+
+ ![image](https://github.com/user-attachments/assets/a2899061-1f59-475f-b2cb-ba73935f8216)
+ ![image](https://github.com/user-attachments/assets/5ede5d31-d585-412b-a170-166151076970)
+
 
 🙌 Author
 Ramesh Dumala
