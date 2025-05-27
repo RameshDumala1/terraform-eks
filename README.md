@@ -196,13 +196,7 @@ curl -I https://dumalarameshaws.info
 * Route 53 record for domain
 ![image](https://github.com/user-attachments/assets/0d37cb8a-1970-463a-b773-86918ee9ed3a)
 
----
-
-## 👨‍💼 Author
-
-**Ramesh D**
-DevOps Engineer | AWS | Kubernetes | Terraform | GitOps
-
+![image](https://github.com/user-attachments/assets/9206211d-aa48-4559-ae7c-4a191d2b468a)
 
  ArgoCD UI with NGINX app synced
 
@@ -225,4 +219,4 @@ DevOps Engineer | AWS | Kubernetes | Terraform | GitOps
 
 🙌 Author
 Ramesh Dumala
-DevOps Engineer | Cloud Enthusiast
+DevOps Engineer | AWS | Kubernetes | Terraform | GitOps
