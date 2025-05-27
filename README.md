@@ -198,9 +198,15 @@ curl -I https://dumalarameshaws.info
 
 ![image](https://github.com/user-attachments/assets/9206211d-aa48-4559-ae7c-4a191d2b468a)
 
+![image](https://github.com/user-attachments/assets/19ea2f61-5f35-4bd3-8d3c-17ee9d1d6766)
+
+
  ArgoCD UI with NGINX app synced
 
  ![image](https://github.com/user-attachments/assets/f70b184e-6d84-49f7-b903-7a3f53ca7768)
+
+ ![image](https://github.com/user-attachments/assets/9666699b-dd4e-4fa5-84a9-26006cb1dff1)
+
 
 
  NGINX service running via LoadBalancer or NodePort
