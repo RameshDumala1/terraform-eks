@@ -189,6 +189,7 @@ curl -I https://dumalarameshaws.info
 | Domain Mapped       | ✅      |
 
 ---
+![image](https://github.com/user-attachments/assets/82fe6c03-b668-47fb-b773-6630e54de8d2)
 
 * `kubectl get nodes`
 * ArgoCD UI showing NGINX app synced
