@@ -1,167 +1,208 @@
-📘 README.md – CI/CD Pipeline with Terraform, EKS, Kubernetes, and ArgoCD
-🚀 CI/CD Infrastructure with GitOps on AWS (EKS + Terraform + ArgoCD)
-This project provisions a complete CI/CD infrastructure pipeline on AWS using Terraform, Kubernetes, and ArgoCD, with GitOps principles. The application deployed is a basic NGINX web server using a Kubernetes Deployment and Service.
+# 🚀 CI/CD Infrastructure on AWS with Terraform, EKS, ArgoCD, and Ingress
 
-🎯 Objectives
-Provision AWS EKS Cluster using Terraform
+This project provisions a **complete CI/CD infrastructure** on AWS using **Terraform**, **Kubernetes (EKS)**, **ArgoCD**, and **Ingress with HTTPS** using a custom domain via Route 53 and ACM.
 
-Deploy an NGINX application using GitOps (ArgoCD)
+---
 
-Use ArgoCD to automate deployment from a GitHub repository
+## 🌟 Objectives
 
-Expose ArgoCD and the NGINX application
+* Provision AWS EKS Cluster using Terraform
+* Deploy an NGINX application using GitOps (ArgoCD)
+* Automate deployments from GitHub repo using ArgoCD
+* Expose the app via **AWS Load Balancer Ingress**
+* Secure app with **HTTPS using ACM and custom domain**
 
-🧱 Project Structure
-bash
-Copy
-Edit
+---
+
+## 🧱 Project Structure
+
+```bash
 .
 ├── terraform/               # Terraform code for provisioning EKS
-├── manifests/               # Kubernetes manifests (Deployment + Service)
-├── argocd/                  # ArgoCD Application definition
-└── README.md                # This file
-✅ Step-by-Step Execution
-1️⃣ Infrastructure Provisioning with Terraform
-Location: terraform/
+├── manifests/               # Kubernetes manifests for NGINX
+├── argocd/                  # ArgoCD Application resource
+├── nginx-ingress.yaml       # Ingress resource using ALB + ACM + TLS
+└── README.md
+```
 
-We used the terraform-aws-modules/eks/aws module to provision:
+---
 
-VPC
+## ✅ Step-by-Step Execution
 
-EKS Cluster
+---
 
-IAM roles and Node Groups
+### 1️⃣ Provision Infrastructure Using Terraform
 
-Cluster endpoint with public access enabled
+**Location**: `terraform/`
 
-❗ The EKS cluster endpoint is public, so we can connect from our local machine for management and ArgoCD setup.
+We used the official EKS module to create:
 
-🛠 Commands Executed:
-bash
-Copy
-Edit
+* VPC
+* EKS Cluster (with public API endpoint)
+* IAM roles and node groups
+
+```bash
 cd terraform
 terraform init
 terraform apply -auto-approve
-After apply, we configured kubectl:
+```
 
-bash
-Copy
-Edit
+Configure `kubectl`:
+
+```bash
 aws eks --region us-east-1 update-kubeconfig --name devops-eks-cluster
 kubectl get nodes
-2️⃣ Kubernetes Manifests for NGINX
-Location: manifests/
+```
 
-We created the following files:
+---
 
-nginx-deployment.yaml: Defines a Deployment of NGINX pods
+### 2️⃣ Deploy NGINX via Kubernetes Manifests
 
-nginx-service.yaml: Exposes NGINX via NodePort
+**Location**: `manifests/`
 
-These are committed to GitHub so that ArgoCD can sync and deploy them automatically using GitOps.
+* `nginx-deployment.yaml`: Defines NGINX pods
+* `nginx-service.yaml`: Exposes NGINX via ClusterIP (used by Ingress)
 
-3️⃣ Install and Expose ArgoCD
-Commands Executed:
+These files were committed to GitHub and automatically synced by ArgoCD.
 
-bash
-Copy
-Edit
+---
+
+### 3️⃣ Setup GitOps with ArgoCD
+
+**Steps:**
+
+```bash
 kubectl create namespace argocd
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-Then we exposed the ArgoCD UI via a LoadBalancer:
-
-bash
-Copy
-Edit
 kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
-kubectl get svc -n argocd
-4️⃣ Access ArgoCD UI
-Visit the LoadBalancer URL on port 443
+```
 
-Default login:
-Username: admin
-Password (retrieve using):
+Get ArgoCD initial password:
 
-bash
-Copy
-Edit
+```bash
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
-5️⃣ GitOps Setup – ArgoCD Application
-Location: argocd/nginx-app.yaml
+```
 
-We created an ArgoCD Application resource pointing to our GitHub repository:
+Login to ArgoCD Web UI and apply the ArgoCD Application resource from `argocd/nginx-app.yaml`.
 
-yaml
-Copy
-Edit
-apiVersion: argoproj.io/v1alpha1
-kind: Application
+---
+
+### 4️⃣ Install AWS Load Balancer Controller (Ingress Controller)
+
+We:
+
+* Enabled OIDC provider
+* Created IAM policy and service account:
+
+```bash
+eksctl create iamserviceaccount \
+  --cluster devops-eks-cluster \
+  --region us-east-1 \
+  --namespace kube-system \
+  --name aws-load-balancer-controller \
+  --attach-policy-arn arn:aws:iam::240224986682:policy/AWSLoadBalancerControllerIAMPolicy \
+  --approve --override-existing-serviceaccounts
+```
+
+* Installed via Helm:
+
+```bash
+helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
+  -n kube-system \
+  --set clusterName=devops-eks-cluster \
+  --set serviceAccount.create=false \
+  --set serviceAccount.name=aws-load-balancer-controller \
+  --set region=us-east-1 \
+  --set vpcId=<your-vpc-id>
+```
+
+---
+
+### 5️⃣ Expose NGINX Using Ingress + Custom Domain
+
+**File**: `nginx-ingress.yaml`
+
+```yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
 metadata:
-  name: nginx-app
-  namespace: argocd
+  name: nginx-ingress
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:240224986682:certificate/<your-acm-cert-id>
 spec:
-  destination:
-    namespace: default
-    server: https://kubernetes.default.svc
-  source:
-    repoURL: https://github.com/<your-username>/<your-repo-name>
-    targetRevision: HEAD
-    path: manifests
-  project: default
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-This tells ArgoCD to continuously monitor and sync the NGINX manifests from GitHub to EKS.
+  ingressClassName: alb
+  tls:
+    - hosts:
+        - dumalarameshaws.info
+      secretName: nginx-tls
+  rules:
+    - host: dumalarameshaws.info
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx-service
+                port:
+                  number: 80
+```
 
-Apply the Application:
+Applied with:
 
-bash
-Copy
-Edit
-kubectl apply -f argocd/nginx-app.yaml
-6️⃣ Access the NGINX Application
-We used a NodePort service to expose NGINX.
+```bash
+kubectl apply -f nginx-ingress.yaml
+```
 
-Get the NodePort:
+---
 
-bash
-Copy
-Edit
-kubectl get svc
-Get the Node External IP:
+### 6️⃣ Configure Route 53 for Domain Mapping
 
-bash
-Copy
-Edit
-kubectl get nodes -o wide
-Then access in browser:
-http://<NodeExternalIP>:<NodePort>
+* Go to Route 53 > Hosted Zones > `dumalarameshaws.info`
+* Create an A record:
 
-🧠 Key Concepts Used
-Infrastructure as Code (IaC): EKS and VPC created using Terraform
+  * Type: `A`
+  * Alias: Yes
+  * Alias Target: ALB DNS from `kubectl get ingress`
 
-GitOps: ArgoCD continuously pulls manifests from GitHub
+Verify:
 
-CI/CD Pipeline: Git push triggers automatic deployment to Kubernetes
+```bash
+curl -I https://dumalarameshaws.info
+```
 
-Declarative Deployments: Kubernetes manifests define app state
+---
 
-✅ Tools Used
-Tool	Purpose
-Terraform	Infrastructure provisioning
-AWS EKS	Managed Kubernetes cluster
-kubectl	Kubernetes CLI
-ArgoCD	GitOps CI/CD automation
-GitHub	Source of truth for Kubernetes YAML
+## ✅ Final Output
 
-📌 Optional Extensions (Not Implemented Yet)
-Setup Ingress Controller (e.g., AWS ALB Ingress Controller)
+| Component           | Status |
+| ------------------- | ------ |
+| Terraform Infra     | ✅      |
+| EKS Cluster         | ✅      |
+| GitOps via ArgoCD   | ✅      |
+| NGINX App Deployed  | ✅      |
+| ALB Ingress Created | ✅      |
+| HTTPS Secured       | ✅      |
+| Domain Mapped       | ✅      |
 
-Use Route53 + custom domain
+---
 
-Set up HTTPS (TLS) for NGINX
+* `kubectl get nodes`
+* ArgoCD UI showing NGINX app synced
+* Browser showing `https://dumalarameshaws.info`
+* Route 53 record for domain
+![image](https://github.com/user-attachments/assets/0d37cb8a-1970-463a-b773-86918ee9ed3a)
+
+---
+
+## 👨‍💼 Author
+
+**Ramesh D**
+DevOps Engineer | AWS | Kubernetes | Terraform | GitOps
+
 
  ArgoCD UI with NGINX app synced
 
