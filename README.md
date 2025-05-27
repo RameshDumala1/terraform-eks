@@ -217,6 +217,7 @@ curl -I https://dumalarameshaws.info
  ![image](https://github.com/user-attachments/assets/5ede5d31-d585-412b-a170-166151076970)
 
 
-🙌 Author
-Ramesh Dumala
+👨‍💼 Author
+
+Ramesh D
 DevOps Engineer | AWS | Kubernetes | Terraform | GitOps
